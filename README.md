@@ -1,226 +1,187 @@
-> [!NOTE]  
-> This repo has been archived. Please refer instead to:
-> - The official [React Router templates](https://github.com/remix-run/react-router-templates/) for simple templates to get started with
-> - [The Epic Stack](https://github.com/epicweb-dev/epic-stack) for a more comprehensive, batteries-included option
-> - [Remix Discord](https://rmx.as/discord) to ask and share community templates
+# Marine Data Hub
 
-# Remix Blues Stack
+A Remix.run v2 web application for managing, querying, and uploading spatio-temporal marine data.  
+Demonstrates a hybrid database setup with MySQL, MongoDB, and Redis caching.
 
-![The Remix Blues Stack](https://repository-images.githubusercontent.com/461012689/37d5bd8b-fa9c-4ab0-893c-f0a199d5012d)
+---
 
-Learn more about [Remix Stacks](https://remix.run/stacks).
+## Features
 
+- User authentication and session management  
+- Upload marine data CSV files, linked to elements  
+- Store metadata in MySQL, data points in MongoDB  
+- Query data with bounding box filtering and element selection  
+- Redis caching for frequently queried data  
+- Preview and download uploaded files  
+- Responsive UI with Tailwind CSS
+
+---
+
+## Prerequisites
+
+- **Node.js** (v18 or higher recommended)  
+- **npm** (comes with Node.js)  
+- **MySQL** server running locally or remotely  
+- **MongoDB** server running locally or remotely  
+- **Redis** server running locally or remotely  
+- MacOS tested, should work on Linux/Windows with minimal changes
+
+---
+
+## Setup Instructions
+
+### 1. Clone the Repository
+### 2. Install Dependencies
+
+```bash
+npm install
 ```
-npx create-remix@latest --template remix-run/blues-stack
+
+### 3. Set up Environment Variables
+
+Create a `.env` file in the project root with the following variables:
+
+```env
+DATABASE_URL="mysql://root:ppasssword@localhost:3306/oceanic"
+MONGODB_URL="mongodb://127.0.0.1:27017/oceanic?directConnection=true&serverSelectionTimeoutMS=2000"
+
+NODE_ENV="development"
+SERVER_URL="http://localhost:3000"
+
+SESSION_SECRET="yp7cV8qrMAs3txy7Areb8Wj5d@tc0@y"
+
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
 ```
 
-## What's in the stack
+* Replace MySQL connection string (`DATABASE_URL`) with your credentials
+* Replace MongoDB URL if different
+* Adjust Redis host and port as needed
+* Set a strong `SESSION_SECRET` for user session security
 
-- [Multi-region Fly app deployment](https://fly.io/docs/apps/scale-count/) with [Docker](https://www.docker.com/)
-- [Multi-region Fly PostgreSQL Cluster](https://fly.io/docs/postgres/advanced-guides/high-availability-and-global-replication/)
-- Healthcheck endpoint for [Fly backups region fallbacks](https://fly.io/docs/reference/configuration/#services-http_checks)
-- [GitHub Actions](https://github.com/features/actions) for deploy on merge to production and staging environments
-- Email/Password Authentication with [cookie-based sessions](https://remix.run/utils/sessions#creatememorysessionstorage)
-- Database ORM with [Prisma](https://prisma.io)
-- Styling with [Tailwind](https://tailwindcss.com/)
-- End-to-end testing with [Cypress](https://cypress.io)
-- Local third party request mocking with [MSW](https://mswjs.io)
-- Unit testing with [Vitest](https://vitest.dev) and [Testing Library](https://testing-library.com)
-- Code formatting with [Prettier](https://prettier.io)
-- Linting with [ESLint](https://eslint.org)
-- Static Types with [TypeScript](https://typescriptlang.org)
+---
 
-Not a fan of bits of the stack? Fork it, change it, and use `npx create-remix --template your/repo`! Make it your own.
+### 4. Install and Start Databases and Redis
 
-## Quickstart
+#### MySQL
 
-Click this button to create a [Gitpod](https://gitpod.io) workspace with the project set up, Postgres started, and Fly pre-installed
+* Install MySQL via [Homebrew](https://brew.sh) if not installed:
 
-[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/remix-run/blues-stack/tree/main)
+```bash
+brew install mysql
+brew services start mysql
+```
 
-## Development
+* Create the database and user as per your `.env` credentials.
 
-- First run this stack's `remix.init` script and commit the changes it makes to your project.
+#### MongoDB
 
-  ```sh
-  npx remix init
-  git init # if you haven't already
-  git add .
-  git commit -m "Initialize project"
-  ```
+* Install MongoDB via Homebrew:
 
-- Start the Postgres Database in [Docker](https://www.docker.com/get-started):
+```bash
+brew tap mongodb/brew
+brew install mongodb-community@6.0
+brew services start mongodb-community@6.0
+```
 
-  ```sh
-  npm run docker
-  ```
+#### Redis
 
-  > **Note:** The npm script will complete while Docker sets up the container in the background. Ensure that Docker has finished and your container is running before proceeding.
+* Install Redis via Homebrew:
 
-- Initial setup:
+```bash
+brew install redis
+brew services start redis
+```
 
-  ```sh
-  npm run setup
-  ```
+Verify Redis is running:
 
-- Run the first build:
+```bash
+redis-cli ping
+# Should reply with PONG
+```
 
-  ```sh
-  npm run build
-  ```
+---
 
-- Start dev server:
+### 5. Set up Prisma and Database Migrations
 
-  ```sh
-  npm run dev
-  ```
+Generate Prisma client and run migrations:
 
-This starts your app in development mode, rebuilding assets on file changes.
+```bash
+npx prisma generate
+npx prisma migrate deploy
+npx prisma generate --schema=prisma/mongo.prisma
+```
 
-The database seed script creates a new user with some data you can use to get started:
+---
 
-- Email: `rachel@remix.run`
-- Password: `racheliscool`
+### 6. Seed the Database
 
-If you'd prefer not to use Docker, you can also use Fly's Wireguard VPN to connect to a development database (or even your production database). You can find the instructions to set up Wireguard [here](https://fly.io/docs/reference/private-networking/#install-your-wireguard-app), and the instructions for creating a development database [here](https://fly.io/docs/reference/postgres/).
+```bash
+npm run setup
+```
 
-### Relevant code:
+This runs Prisma generate, applies migrations, and seeds initial data like Elements and Element Categories.
 
-This is a pretty simple note-taking app, but it's a good example of how you can build a full stack app with Prisma and Remix. The main functionality is creating users, logging in and out, and creating and deleting notes.
+---
 
-- creating users, and logging in and out [./app/models/user.server.ts](./app/models/user.server.ts)
-- user sessions, and verifying them [./app/session.server.ts](./app/session.server.ts)
-- creating, and deleting notes [./app/models/note.server.ts](./app/models/note.server.ts)
+### 7. Run the Development Server
 
-## Deployment
+```bash
+npm run dev
+```
 
-This Remix Stack comes with two GitHub Actions that handle automatically deploying your app to production and staging environments.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Prior to your first deployment, you'll need to do a few things:
+---
 
-- [Install Fly](https://fly.io/docs/getting-started/installing-flyctl/)
+## Project Structure Highlights
 
-- Sign up and log in to Fly
+* `app/routes/inside/upload.tsx` — Upload new marine data files
+* `app/routes/inside/uploads.tsx` — View user uploads with preview and download
+* `app/db.server.ts` — MySQL (Prisma) setup
+* `app/db2.server.ts` — MongoDB setup
+* `app/models/redis.server.ts` — Redis client setup and caching utilities
+* `app/components/` — Reusable UI components using Tailwind CSS
 
-  ```sh
-  fly auth signup
-  ```
+---
 
-  > **Note:** If you have more than one Fly account, ensure that you are signed into the same account in the Fly CLI as you are in the browser. In your terminal, run `fly auth whoami` and ensure the email matches the Fly account signed into the browser.
+## Troubleshooting
 
-- Create two apps on Fly, one for staging and one for production:
+* If you get errors related to missing environment variables, double-check your `.env`
+* Ensure MySQL, MongoDB, and Redis are running and accessible via the configured host/ports
+* If you see errors about `Buffer is not defined` in client bundles, ensure your Node and Remix versions are compatible
+* Use `redis-cli` to check Redis connectivity
 
-  ```sh
-  fly apps create blues-stack-template
-  fly apps create blues-stack-template-staging
-  ```
+---
 
-  > **Note:** Once you've successfully created an app, double-check the `fly.toml` file to ensure that the `app` key is the name of the production app you created. This Stack [automatically appends a unique suffix at init](https://github.com/remix-run/blues-stack/blob/4c2f1af416b539187beb8126dd16f6bc38f47639/remix.init/index.js#L29) which may not match the apps you created on Fly. You will likely see [404 errors in your Github Actions CI logs](https://community.fly.io/t/404-failure-with-deployment-with-remix-blues-stack/4526/3) if you have this mismatch.
+## Running
 
-- Initialize Git.
+There's a 'test.csv' file in the root directory that you can use to test the upload functionality.
 
-  ```sh
-  git init
-  ```
-
-- Create a new [GitHub Repository](https://repo.new), and then add it as the remote for your project. **Do not push your app yet!**
-
-  ```sh
-  git remote add origin <ORIGIN_URL>
-  ```
-
-- Add a `FLY_API_TOKEN` to your GitHub repo. To do this, go to your user settings on Fly and create a new [token](https://web.fly.io/user/personal_access_tokens/new), then add it to [your repo secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets) with the name `FLY_API_TOKEN`.
-
-- Add a `SESSION_SECRET` to your fly app secrets, to do this you can run the following commands:
-
-  ```sh
-  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app blues-stack-template
-  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app blues-stack-template-staging
-  ```
-
-  > **Note:** When creating the staging secret, you may get a warning from the Fly CLI that looks like this:
-  >
-  > ```
-  > WARN app flag 'blues-stack-template-staging' does not match app name in config file 'blues-stack-template'
-  > ```
-  >
-  > This simply means that the current directory contains a config that references the production app we created in the first step. Ignore this warning and proceed to create the secret.
-
-  If you don't have openssl installed, you can also use [1password](https://1password.com/password-generator/) to generate a random secret, just replace `$(openssl rand -hex 32)` with the generated secret.
-
-- Create a database for both your staging and production environments. Run the following:
-
-  ```sh
-  fly postgres create --name blues-stack-template-db
-  fly postgres attach --app blues-stack-template blues-stack-template-db
-
-  fly postgres create --name blues-stack-template-staging-db
-  fly postgres attach --app blues-stack-template-staging blues-stack-template-staging-db
-  ```
-
-  > **Note:** You'll get the same warning for the same reason when attaching the staging database that you did in the `fly set secret` step above. No worries. Proceed!
-
-Fly will take care of setting the `DATABASE_URL` secret for you.
-
-Now that everything is set up you can commit and push your changes to your repo. Every commit to your `main` branch will trigger a deployment to your production environment, and every commit to your `dev` branch will trigger a deployment to your staging environment.
-
-If you run into any issues deploying to Fly, make sure you've followed all of the steps above and if you have, then post as many details about your deployment (including your app name) to [the Fly support community](https://community.fly.io). They're normally pretty responsive over there and hopefully can help resolve any of your deployment issues and questions.
-
-### Multi-region deploys
-
-Once you have your site and database running in a single region, you can add more regions by following [Fly's Scaling](https://fly.io/docs/reference/scaling/) and [Multi-region PostgreSQL](https://fly.io/docs/getting-started/multi-region-databases/) docs.
-
-Make certain to set a `PRIMARY_REGION` environment variable for your app. You can use `[env]` config in the `fly.toml` to set that to the region you want to use as the primary region for both your app and database.
-
-#### Testing your app in other regions
-
-Install the [ModHeader](https://modheader.com/) browser extension (or something similar) and use it to load your app with the header `fly-prefer-region` set to the region name you would like to test.
-
-You can check the `x-fly-region` header on the response to know which region your request was handled by.
-
-## GitHub Actions
-
-We use GitHub Actions for continuous integration and deployment. Anything that gets into the `main` branch will be deployed to production after running tests/build/etc. Anything in the `dev` branch will be deployed to staging.
+---
 
 ## Testing
 
-### Cypress
+Run unit and E2E tests with:
 
-We use Cypress for our End-to-End tests in this project. You'll find those in the `cypress` directory. As you make changes, add to an existing file or create a new file in the `cypress/e2e` directory to test your changes.
-
-We use [`@testing-library/cypress`](https://testing-library.com/cypress) for selecting elements on the page semantically.
-
-To run these tests in development, run `npm run test:e2e:dev` which will start the dev server for the app as well as the Cypress client. Make sure the database is running in docker as described above.
-
-We have a utility for testing authenticated features without having to go through the login flow:
-
-```ts
-cy.login();
-// you are now logged in as a new user
+```bash
+npm test
 ```
 
-We also have a utility to auto-delete the user at the end of your test. Just make sure to add this in each test file:
+---
 
-```ts
-afterEach(() => {
-  cy.cleanupUser();
-});
-```
+## Additional Notes
 
-That way, we can keep your local db clean and keep your tests isolated from one another.
+* Data caching via Redis has a default TTL of 5 minutes
+* Uploaded CSVs are parsed and stored in MongoDB with metadata in MySQL
+* The UI is built with Tailwind CSS and React Icons for a clean look
 
-### Vitest
+---
 
-For lower level tests of utilities and individual components, we use `vitest`. We have DOM-specific assertion helpers via [`@testing-library/jest-dom`](https://testing-library.com/jest-dom).
+## License
 
-### Type Checking
+MIT License © Praise Mlambo
 
-This project uses TypeScript. It's recommended to get TypeScript set up for your editor to get a really great in-editor experience with type checking and auto-complete. To run type checking across the whole project, run `npm run typecheck`.
+---
 
-### Linting
-
-This project uses ESLint for linting. That is configured in `.eslintrc.js`.
-
-### Formatting
-
-We use [Prettier](https://prettier.io/) for auto-formatting in this project. It's recommended to install an editor plugin (like the [VSCode Prettier plugin](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)) to get auto-formatting on save. There's also a `npm run format` script you can run to format all files in the project.
+If you have any questions or issues, please do not contact me.

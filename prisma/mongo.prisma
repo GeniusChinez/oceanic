@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/mongo-client"
+}
+
+datasource mongodb {
+  provider = "mongodb"
+  url      = env("MONGODB_URL")
+}
+
+model ElementData {
+  id        String   @id @default(auto()) @map("_id") @mongodb.ObjectId
+  elementId Int
+  fileId    Int
+  value     Float
+  latitude  Float
+  longitude Float
+  timestamp DateTime // optional if needed
+}
